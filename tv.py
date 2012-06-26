@@ -1,11 +1,12 @@
 from errbot.botplugin import BotPlugin
 from errbot.jabberbot import botcmd
+from datetime import datetime
 import tvdb_api
 
 TVDB_KEY = 'EB10E1EFE69B3AA5'
 
-SHOW_INFO = """
-_{seriesname}_
+SHOW_INFO = """{seriesname}
+
 Status: {status}
 Network: {network}
 Airs: {airs_dayofweek} at {airs_time}
@@ -17,23 +18,22 @@ Genre: {genre}
 CRating: {contentrating}
 Actors: {actors}
 
-{overview}
-"""
+{overview}"""
 
 
-EPISODE_INFO = """
-__{episodename}__
+EPISODE_INFO = """{seasonnumber:>02}x{episodenumber:>02} - {episodename}
+
 First Aired: {firstaired}
 Rating: {rating}
 Writer/Director: {writer}/{director}
 Guest Stars: {gueststars}
 
-{overview}
-"""
+{overview}"""
 
 class TV(BotPlugin):
-    """ Bridge to tvdb
+    """ Shows info about your favorite shows [Bridge to tvdb.com]
     """
+    min_err_version = '1.2.0'
 
     def activate(self):
         self.tvdb = tvdb_api.Tvdb(apikey=TVDB_KEY, banners=True) # heavier stuff
@@ -54,6 +54,28 @@ class TV(BotPlugin):
         show = self.tvdb[args]
         self.send(mess.getFrom(), show['banner'], message_type=mess.getType())
         return SHOW_INFO.format(**show.data)
+
+    @botcmd
+    def tv_next(self, mess, args):
+        """ Shows when to expect the next episode of the given show
+        ie. !tv next breaking bad
+        """
+        if not args:
+            return 'Am I supposed to guess the show?...'
+        show = self.tvdb[args]
+        now = datetime.now()
+        for snb, season in show.iteritems():
+            for enb, episode in season.iteritems():
+                fa = episode['firstaired']
+                if not fa:
+                    continue
+                if datetime.strptime(episode['firstaired'], '%Y-%m-%d') >= now:
+                    episode['overview'] = '[ZAPPED BY ANTI-SPOILER !]'
+                    return EPISODE_INFO.format(**episode)
+
+        self.send(mess.getFrom(), show['banner'], message_type=mess.getType())
+        return SHOW_INFO.format(**show.data)
+
 
     @botcmd
     def tv_seasons(self, mess, args):
@@ -84,11 +106,22 @@ class TV(BotPlugin):
         ie. !tv episode 01x03 breaking bad
         """
         if len(args) < 2:
-            return 'the syntax is !tv episode aaxbb name'
+            return 'the syntax is !tv episode ssxee name'
+        sxe = args[0].lower()
+        if  sxe.index('x') == -1:
+            return 'the episode syntax is ssxee with ss = season and ee = episode'
         season_number, episode_number = args[0].split('x')
+        if not season_number.isdigit() or not episode_number.isdigit():
+            return 'the episode syntax is ssxee with ss = season and ee = episode'
         season_number, episode_number = int(season_number), int(episode_number)
         name = ' '.join(args[1:])
-        episode = self.tvdb[name][season_number][episode_number]
+        show = self.tvdb[name]
+        if season_number<=0 or season_number>= len(show):
+            return 'invalid season number'
+        season = show[season_number]
+        if episode_number<=0 or episode_number>= len(season):
+            return 'invalid episode number'
+        episode = season[episode_number]
         self.send(mess.getFrom(),episode['filename'], message_type=mess.getType())
         return EPISODE_INFO.format(**episode)
 
