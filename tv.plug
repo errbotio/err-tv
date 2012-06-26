@@ -1,0 +1,6 @@
+[Core]
+Name = TV
+Module = tv
+
+[Documentation]
+Description = So what's the status of this show ? 
