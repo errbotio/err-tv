@@ -20,7 +20,6 @@ Actors: {actors}
 
 {overview}"""
 
-
 EPISODE_INFO = """{seasonnumber:>02}x{episodenumber:>02} - {episodename}
 
 First Aired: {firstaired}
@@ -98,7 +97,8 @@ class TV(BotPlugin):
         season_number = int(args[0])
         name = ' '.join(args[1:])
         season = self.tvdb[name][season_number]
-        return ('List of the episodes of season %02i:\n' % season_number) + '\n'.join(['%02ix%02i [%s] %s '%(season_number, episode_number, episode['firstaired'], episode['episodename']) for episode_number, episode in season.iteritems()])
+        return ('List of the episodes of season %02i:\n' % season_number) + '\n'.join(
+            ['%02ix%02i [%s] %s ' % (season_number, episode_number, episode['firstaired'], episode['episodename']) for episode_number, episode in season.iteritems()])
 
     @botcmd(split_args_with=' ')
     def tv_episode(self, mess, args):
@@ -116,13 +116,13 @@ class TV(BotPlugin):
         season_number, episode_number = int(season_number), int(episode_number)
         name = ' '.join(args[1:])
         show = self.tvdb[name]
-        if season_number<=0 or season_number>= len(show):
+        if season_number not in show:
             return 'invalid season number'
         season = show[season_number]
-        if episode_number<=0 or episode_number>= len(season):
+        if episode_number not in season:
             return 'invalid episode number'
         episode = season[episode_number]
-        self.send(mess.getFrom(),episode['filename'], message_type=mess.getType())
+        self.send(mess.getFrom(), episode['filename'], message_type=mess.getType())
         return EPISODE_INFO.format(**episode)
 
 
