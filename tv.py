@@ -62,14 +62,20 @@ class TV(BotPlugin):
         if not args:
             return 'Am I supposed to guess the show?...'
         show = self.tvdb[args]
-        now = datetime.now()
+        now = datetime.now().date()
         for snb, season in show.iteritems():
             for enb, episode in season.iteritems():
                 fa = episode['firstaired']
                 if not fa:
                     continue
-                if datetime.strptime(episode['firstaired'], '%Y-%m-%d') >= now:
+                firstaired = datetime.strptime(episode['firstaired'], '%Y-%m-%d').date()
+                if firstaired >= now:
                     episode['overview'] = '[ZAPPED BY ANTI-SPOILER !]'
+                    days = abs((now - firstaired).days)
+                    if days == 0:
+                        episode['firstaired'] = 'it\'s today!'
+                    else:
+                        episode['firstaired'] = 'in %d days' % days
                     return EPISODE_INFO.format(**episode)
 
         self.send(mess.getFrom(), show['banner'], message_type=mess.getType())
