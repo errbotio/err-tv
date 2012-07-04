@@ -76,6 +76,7 @@ class TV(BotPlugin):
                         episode['firstaired'] = 'it\'s today!'
                     else:
                         episode['firstaired'] = 'in %d days' % days
+                    episode['firstaired'] += ' (%s)' % str(firstaired)
                     return EPISODE_INFO.format(**episode)
 
         self.send(mess.getFrom(), show['banner'], message_type=mess.getType())
