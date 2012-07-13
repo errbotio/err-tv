@@ -2,6 +2,7 @@ from errbot.botplugin import BotPlugin
 from errbot.jabberbot import botcmd
 from datetime import datetime
 import tvdb_api
+import copy
 
 TVDB_KEY = 'EB10E1EFE69B3AA5'
 
@@ -66,18 +67,19 @@ class TV(BotPlugin):
         for snb, season in show.iteritems():
             for enb, episode in season.iteritems():
                 fa = episode['firstaired']
+                local_episode = copy.deepcopy(episode)
                 if not fa:
                     continue
-                firstaired = datetime.strptime(episode['firstaired'], '%Y-%m-%d').date()
+                firstaired = datetime.strptime(local_episode['firstaired'], '%Y-%m-%d').date()
                 if firstaired >= now:
-                    episode['overview'] = '[ZAPPED BY ANTI-SPOILER !]'
+                    local_episode['overview'] = '[ZAPPED BY ANTI-SPOILER !]'
                     days = abs((now - firstaired).days)
                     if days == 0:
-                        episode['firstaired'] = 'it\'s today!'
+                        local_episode['firstaired'] = 'it\'s today!'
                     else:
-                        episode['firstaired'] = 'in %d days' % days
-                    episode['firstaired'] += ' (%s)' % str(firstaired)
-                    return EPISODE_INFO.format(**episode)
+                        local_episode['firstaired'] = 'in %d days' % days
+                    local_episode['firstaired'] += ' (%s)' % str(firstaired)
+                    return EPISODE_INFO.format(**local_episode)
 
         self.send(mess.getFrom(), show['banner'], message_type=mess.getType())
         return SHOW_INFO.format(**show.data)
