@@ -3,7 +3,7 @@ Name = TV
 Module = tv
 
 [Documentation]
-Description = So what's the status of this show ? 
+Description = So what's the status of this show ?
 
 [Python]
-Version = 2
+Version = 2+

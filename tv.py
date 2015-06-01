@@ -1,6 +1,7 @@
 from datetime import datetime
 import tvdb_api
 import copy
+import six
 
 # Backward compatibility
 from errbot.version import VERSION
@@ -72,8 +73,8 @@ class TV(BotPlugin):
             return 'Am I supposed to guess the show?...'
         show = self.tvdb[args]
         now = datetime.now().date()
-        for snb, season in show.iteritems():
-            for enb, episode in season.iteritems():
+        for snb, season in six.iteritems(show):
+            for enb, episode in six.iteritems(season):
                 fa = episode['firstaired']
                 local_episode = copy.deepcopy(episode)
                 if not fa:
@@ -115,7 +116,7 @@ class TV(BotPlugin):
         name = ' '.join(args[1:])
         season = self.tvdb[name][season_number]
         return ('List of the episodes of season %02i:\n' % season_number) + '\n'.join(
-            ['%02ix%02i [%s] %s ' % (season_number, episode_number, episode['firstaired'], episode['episodename']) for episode_number, episode in season.iteritems()])
+            ['%02ix%02i [%s] %s ' % (season_number, episode_number, episode['firstaired'], episode['episodename']) for episode_number, episode in six.iteritems(season)])
 
     @botcmd(split_args_with=' ')
     def tv_episode(self, mess, args):
